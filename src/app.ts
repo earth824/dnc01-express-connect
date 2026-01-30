@@ -3,11 +3,14 @@ import { env } from './config/env.config.js';
 import { notFound } from './middlewares/not-found.middleware.js';
 import { error } from './middlewares/error.middleware.js';
 import morgan from 'morgan';
+import { authRouter } from './routes/auth.route.js';
 
 const app = express();
 
 app.use(morgan('dev'));
 app.use(express.json());
+
+app.use('/auth', authRouter);
 
 app.use(notFound);
 app.use(error);
