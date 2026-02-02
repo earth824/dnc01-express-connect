@@ -5,12 +5,14 @@ import { error } from './middlewares/error.middleware.js';
 import morgan from 'morgan';
 import { authRouter } from './routes/auth.route.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
-app.use(cors({ origin: [env.FRONTEND_URL] }));
+app.use(cors({ origin: [env.FRONTEND_URL], credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/auth', authRouter);
 
