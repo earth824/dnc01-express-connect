@@ -1,10 +1,11 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
 import { loginSchema, registerSchema } from '../validators/auth.validator.js';
 import bcrypt from 'bcrypt';
 import { env } from '../config/env.config.js';
 import { prisma } from '../db/prisma.js';
 import { PrismaClientKnownRequestError } from '../db/generated/prisma/internal/prismaNamespace.js';
 import { signAccessJwt, signRefreshJwt } from '../utils/token.js';
+import { getUserPayload } from '../utils/auth.js';
 
 const register: RequestHandler = async (req, res) => {
   const data = registerSchema.parse(req.body);
@@ -54,4 +55,25 @@ const login: RequestHandler = async (req, res) => {
   // res.status(200).json({ access_token, user: userWithoutPassword });
 };
 
-export const authController = { register, login };
+const getMe = async (req: Request, res: Response) => {
+  const payload = getUserPayload(req);
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id, status: true },
+    omit: { password: true }
+  });
+
+  if (!user) {
+    res
+      .status(403)
+      .json({ message: 'user has been deleted or user is banned' });
+    return;
+  }
+
+  res.status(200).json({ user });
+};
+
+const logout: RequestHandler = (req, res) => {
+  res.clearCookie('access_token').status(200).json({ message: 'logged out' });
+};
+
+export const authController = { register, login, getMe, logout };
