@@ -4,8 +4,13 @@ import bcrypt from 'bcrypt';
 import { env } from '../config/env.config.js';
 import { prisma } from '../db/prisma.js';
 import { PrismaClientKnownRequestError } from '../db/generated/prisma/internal/prismaNamespace.js';
-import { signAccessJwt, signRefreshJwt } from '../utils/token.js';
+import {
+  signAccessJwt,
+  signRefreshJwt,
+  verifyRefreshJwt
+} from '../utils/token.js';
 import { getUserPayload } from '../utils/auth.js';
+import jwt from 'jsonwebtoken';
 
 const register: RequestHandler = async (req, res) => {
   const data = registerSchema.parse(req.body);
@@ -77,8 +82,40 @@ const logout: RequestHandler = (req, res) => {
   res.clearCookie('access_token').status(200).json({ message: 'logged out' });
 };
 
-const refresh: RequestHandler = (req, res) => {
+const refresh: RequestHandler = async (req, res) => {
   const token = req.cookies.refresh_token;
+  if (typeof token !== 'string') {
+    res.status(400).json({ message: 'token is missing' });
+    return;
+  }
+
+  try {
+    const payload = verifyRefreshJwt(token);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id, status: true },
+      omit: { password: true }
+    });
+    if (!user) {
+      res.clearCookie('refresh_token', { path: '/auth' });
+      res
+        .status(403)
+        .json({ message: 'user has been deleted or user is banned' });
+      return;
+    }
+
+    const access_token = signAccessJwt({ id: user.id, role: user.role });
+    res.status(200).json({ access_token, user });
+  } catch (err) {
+    // TokenExpiredError, JsonWebtokenError
+    if (
+      err instanceof jwt.TokenExpiredError ||
+      err instanceof jwt.JsonWebTokenError
+    ) {
+      res.clearCookie('refresh_token', { path: '/auth' });
+      res.status(401).json({ message: 'invalid token or token expired' });
+    }
+    throw err;
+  }
 };
 
 export const authController = { register, login, getMe, logout, refresh };

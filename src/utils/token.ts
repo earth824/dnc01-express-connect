@@ -22,3 +22,6 @@ export const signRefreshJwt = (payload: RefreshJwtPayload): string =>
   jwt.sign(payload, env.REFRESH_JWT_SECRET, {
     expiresIn: env.REFRESH_JWT_EXPIRES_IN
   });
+
+export const verifyRefreshJwt = (token: string): RefreshJwtPayload =>
+  jwt.verify(token, env.REFRESH_JWT_SECRET) as RefreshJwtPayload;
