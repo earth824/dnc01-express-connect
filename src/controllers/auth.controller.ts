@@ -39,18 +39,19 @@ const login: RequestHandler = async (req, res) => {
   }
 
   const access_token = signAccessJwt({ id: user.id, role: user.role });
-  // const refresh_token = signRefreshJwt({ id: user.id });
+  const refresh_token = signRefreshJwt({ id: user.id });
   const { password: pass, ...userWithoutPassword } = user;
 
   res
-    .cookie('access_token', access_token, {
+    .cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: env.ACCESS_JWT_COOKIE_MAX_AGE
+      maxAge: env.REFRESH_JWT_COOKIE_MAX_AGE,
+      path: '/auth'
     })
     .status(200)
-    .json({ user: userWithoutPassword });
+    .json({ user: userWithoutPassword, access_token });
 
   // res.status(200).json({ access_token, user: userWithoutPassword });
 };
@@ -76,4 +77,8 @@ const logout: RequestHandler = (req, res) => {
   res.clearCookie('access_token').status(200).json({ message: 'logged out' });
 };
 
-export const authController = { register, login, getMe, logout };
+const refresh: RequestHandler = (req, res) => {
+  const token = req.cookies.refresh_token;
+};
+
+export const authController = { register, login, getMe, logout, refresh };
