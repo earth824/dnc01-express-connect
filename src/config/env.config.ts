@@ -10,7 +10,8 @@ const envSchema = z.object({
   ACCESS_JWT_SECRET: z.string().min(32),
   ACCESS_JWT_EXPIRES_IN: z.coerce.number().int().positive(),
   REFRESH_JWT_SECRET: z.string().min(32),
-  REFRESH_JWT_EXPIRES_IN: z.coerce.number().int().positive()
+  REFRESH_JWT_EXPIRES_IN: z.coerce.number().int().positive(),
+  ACCESS_JWT_COOKIE_MAX_AGE: z.coerce.number().int().positive()
 });
 
 const { success, data, error } = envSchema.safeParse(process.env);

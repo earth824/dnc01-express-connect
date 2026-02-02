@@ -27,21 +27,31 @@ const login: RequestHandler = async (req, res) => {
   const { email, password } = loginSchema.parse(req.body);
   const user = await prisma.user.findUnique({ where: { email, status: true } });
   if (!user) {
-    res.status(401).json('invalid email or password');
+    res.status(401).json({ message: 'invalid email or password' });
     return;
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    res.status(401).json('invalid email or password');
+    res.status(401).json({ message: 'invalid email or password' });
     return;
   }
 
   const access_token = signAccessJwt({ id: user.id, role: user.role });
-  const refresh_token = signRefreshJwt({ id: user.id });
+  // const refresh_token = signRefreshJwt({ id: user.id });
   const { password: pass, ...userWithoutPassword } = user;
 
-  res.status(200).json({ access_token, user: userWithoutPassword });
+  res
+    .cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: env.ACCESS_JWT_COOKIE_MAX_AGE
+    })
+    .status(200)
+    .json({ user: userWithoutPassword });
+
+  // res.status(200).json({ access_token, user: userWithoutPassword });
 };
 
 export const authController = { register, login };
