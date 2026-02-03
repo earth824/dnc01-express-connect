@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { authRouter } from './routes/auth.route.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { todoRouter } from './routes/todo.route.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/auth', authRouter);
+app.use('/todos', todoRouter);
 
 app.use(notFound);
 app.use(error);
