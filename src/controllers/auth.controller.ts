@@ -10,6 +10,8 @@ import {
   verifyRefreshJwt
 } from '../utils/token.js';
 import { getAuthenticatedUser } from '../utils/auth.js';
+import { Readable } from 'stream';
+import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 
 const register: RequestHandler = async (req, res) => {
   const data = registerSchema.parse(req.body);
@@ -110,4 +112,34 @@ const getMe = async (req: Request, res: Response) => {
   }, 5000);
 };
 
-export const authController = { register, login, refresh, logout, getMe };
+const uploadProfileImage: RequestHandler = async (req, res) => {
+  console.log(req.file);
+  if (!req.file) {
+    return;
+  }
+  const stream = Readable.from(req.file.buffer);
+  const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      (error, uploadResult) => {
+        if (error || !uploadResult) {
+          return reject(error);
+        }
+        resolve(uploadResult);
+      }
+    );
+
+    stream.pipe(uploadStream);
+  });
+  console.log(result);
+
+  res.json({ imageUrl: result.secure_url });
+};
+
+export const authController = {
+  register,
+  login,
+  refresh,
+  logout,
+  getMe,
+  uploadProfileImage
+};
