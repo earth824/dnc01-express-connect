@@ -12,7 +12,10 @@ export const authenticate = (
   if (bearer !== 'Bearer' || !token) {
     res
       .status(400)
-      .json({ message: 'invalid authorization scheme or token is missing' });
+      .json({
+        message: 'invalid authorization scheme or token is missing',
+        errCode: 'INVALID_AUTHORIZATION_HEADER'
+      });
     return;
   }
 
@@ -25,9 +28,10 @@ export const authenticate = (
       err instanceof jwt.TokenExpiredError ||
       err instanceof jwt.JsonWebTokenError
     ) {
-      res
-        .status(401)
-        .json({ message: 'invalid token or token has been expired' });
+      res.status(401).json({
+        message: 'invalid token or token has been expired',
+        errCode: 'INVALID_ACCESS_TOKEN'
+      });
       return;
     }
     throw err;

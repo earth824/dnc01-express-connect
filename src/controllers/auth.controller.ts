@@ -52,8 +52,8 @@ const login: RequestHandler = async (req, res) => {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: env.REFRESH_JWT_COOKIE_MAX_AGE,
-      path: '/auth'
+      maxAge: env.REFRESH_JWT_COOKIE_MAX_AGE
+      // path: '/auth'
     })
     .status(200)
     .json({ user: userWithoutPassword, access_token });
@@ -119,3 +119,6 @@ const refresh: RequestHandler = async (req, res) => {
 };
 
 export const authController = { register, login, getMe, logout, refresh };
+
+// { message: string, errCode:  }
+// { message: 'email in use', errCode: 'EMAIL_ALRAEDY_EXISTS' }
