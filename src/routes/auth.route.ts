@@ -11,4 +11,10 @@ authRouter.post('/login', authController.login);
 authRouter.get('/me', authenticate, authController.getMe);
 authRouter.post('/logout', authController.logout);
 authRouter.get('/refresh', authController.refresh);
-authRouter.patch('/profile', upload.single('profileImage'));
+authRouter.patch(
+  '/profile',
+  authenticate,
+  upload.single('profileImage'),
+  authController.uploadProfileImage
+  // upload.fields([{ name: 'profileImage', maxCount: 5 }, { name: 'coverImage' }])
+);

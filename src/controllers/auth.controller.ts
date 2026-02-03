@@ -11,6 +11,7 @@ import {
 } from '../utils/token.js';
 import { getUserPayload } from '../utils/auth.js';
 import jwt from 'jsonwebtoken';
+import { v2 as cloudinary } from 'cloudinary';
 
 const register: RequestHandler = async (req, res) => {
   const data = registerSchema.parse(req.body);
@@ -118,7 +119,42 @@ const refresh: RequestHandler = async (req, res) => {
   }
 };
 
-export const authController = { register, login, getMe, logout, refresh };
+const uploadProfileImage: RequestHandler = async (req, res) => {
+  console.log(req.file);
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    console.log(result);
+    const userPayload = getUserPayload(req);
+    await prisma.user.update({
+      where: { id: userPayload.id },
+      data: { imageUrl: result.secure_url }
+    });
+    res.status(200).json({ imageUrl: result.secure_url });
+  }
+};
+
+export const authController = {
+  register,
+  login,
+  getMe,
+  logout,
+  refresh,
+  uploadProfileImage
+};
 
 // { message: string, errCode:  }
 // { message: 'email in use', errCode: 'EMAIL_ALRAEDY_EXISTS' }
+// {
+//   public_id: 'cr4mxeqx5zb8rlakpfkg',
+//   version: 1571218330,
+//   signature: '63bfbca643baa9c86b7d2921d776628ac83a1b6e',
+//   width: 864,
+//   height: 576,
+//   format: 'jpg',
+//   resource_type: 'image',
+//   created_at: '2017-06-26T19:46:03Z',
+//   bytes: 120253,
+//   type: 'upload',
+//   url: 'http://res.cloudinary.com/demo/image/upload/v1571218330/cr4mxeqx5zb8rlakpfkg.jpg',
+//   secure_url: 'https://res.cloudinary.com/demo/image/upload/v1571218330/cr4mxeqx5zb8rlakpfkg.jpg'
+// }
