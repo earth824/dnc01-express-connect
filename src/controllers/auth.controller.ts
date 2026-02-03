@@ -53,7 +53,6 @@ const login: RequestHandler = async (req, res) => {
       secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: env.REFRESH_JWT_COOKIE_MAX_AGE
-      // path: '/auth'
     })
     .status(200)
     .json({ user: userWithoutPassword, access_token });
@@ -79,7 +78,7 @@ const getMe = async (req: Request, res: Response) => {
 };
 
 const logout: RequestHandler = (req, res) => {
-  res.clearCookie('access_token').status(200).json({ message: 'logged out' });
+  res.clearCookie('refresh_token').status(200).json({ message: 'logged out' });
 };
 
 const refresh: RequestHandler = async (req, res) => {
@@ -96,7 +95,7 @@ const refresh: RequestHandler = async (req, res) => {
       omit: { password: true }
     });
     if (!user) {
-      res.clearCookie('refresh_token', { path: '/auth' });
+      res.clearCookie('refresh_token');
       res
         .status(403)
         .json({ message: 'user has been deleted or user is banned' });
@@ -111,8 +110,9 @@ const refresh: RequestHandler = async (req, res) => {
       err instanceof jwt.TokenExpiredError ||
       err instanceof jwt.JsonWebTokenError
     ) {
-      res.clearCookie('refresh_token', { path: '/auth' });
+      res.clearCookie('refresh_token');
       res.status(401).json({ message: 'invalid token or token expired' });
+      return;
     }
     throw err;
   }
