@@ -158,3 +158,6 @@ export const authController = {
 //   url: 'http://res.cloudinary.com/demo/image/upload/v1571218330/cr4mxeqx5zb8rlakpfkg.jpg',
 //   secure_url: 'https://res.cloudinary.com/demo/image/upload/v1571218330/cr4mxeqx5zb8rlakpfkg.jpg'
 // }
+
+// import fs from 'fs'
+// fs.unlink(req.file.path)
