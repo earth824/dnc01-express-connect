@@ -7,26 +7,29 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ) => {
-  const accessToken = req.cookies.access_token;
-  if (typeof accessToken !== 'string') {
-    res.status(400).json({ message: 'token is missing' });
+  // exteact access token from bearer authorization header (Bearer access_token)
+  const [bearer, token] = req.headers.authorization?.split(' ') ?? [];
+  if (bearer !== 'Bearer' || !token) {
+    res
+      .status(400)
+      .json({ message: 'invalid authorization scheme or token is missing' });
     return;
   }
 
   try {
-    const payload = verifyAccessJwt(accessToken);
+    const payload = verifyAccessJwt(token);
     req.user = payload;
     next();
   } catch (err) {
-    // TokenExpiredError, JsonWebtokenError
     if (
       err instanceof jwt.TokenExpiredError ||
       err instanceof jwt.JsonWebTokenError
     ) {
-      res.clearCookie('access_token');
-      res.status(401).json({ message: 'invalid token or token expired' });
+      res
+        .status(401)
+        .json({ message: 'invalid token or token has been expired' });
+      return;
     }
-
     throw err;
   }
 };
